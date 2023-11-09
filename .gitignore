@@ -1,2 +1,3 @@
 studies/
 *.pyc
+*.egg-info/
