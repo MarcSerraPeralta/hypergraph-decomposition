@@ -72,7 +72,6 @@ def decompose_dem(dem: DEM) -> DEM:
         det_vec[det_ids] = 1
         edges = MWPM_prim.decode_to_edges_array(det_vec)
         decomposition = from_pymatching_edges_to_dem_id(edges, dem)
-        print(decomposition, hyper)
         dem.add_decomposition(hyper, decomposition)
 
     return dem.get_decomposed_graph()
