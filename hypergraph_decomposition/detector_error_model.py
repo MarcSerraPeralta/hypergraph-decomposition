@@ -24,6 +24,7 @@ class DEM:
         self.decompositions = {}
         self.primitives = []
         self.prim_det_to_id = {}
+        self.undecomposed = {}
         return
 
     def add_fault(self, prob, dets, logs):
@@ -52,6 +53,8 @@ class DEM:
         self.detectors[id_] = sorted(dets)  # for comparison
         self.logicals[id_] = sorted(logs)  # for comparison
         self.det_to_id[tuple(sorted(dets))] = id_
+        # removing elements from a dictionary is faster than from a list
+        self.undecomposed[id_] = True
         return id_
 
     def add_primitive(self, id_):
@@ -66,6 +69,7 @@ class DEM:
             self.primitives.append(id_)
             detectors = tuple(self.detectors[id_])
             self.prim_det_to_id[detectors] = id_
+            del self.undecomposed[id_]
         return
 
     def add_decomposition(self, id_, decomposition):
@@ -96,6 +100,7 @@ class DEM:
             self.decompositions[id_].append(decomposition)
         else:
             self.decompositions[id_] = [decomposition]
+        del self.undecomposed[id_]
         return
 
     def get_primitive_graph(self):
@@ -129,15 +134,11 @@ class DEM:
         return dem
 
     def get_undecomposed_hyperedges(self):
-        undecomposed = []
-        for id_ in self.ids:
-            if (id_ not in self.primitives) and (id_ not in self.decompositions):
-                undecomposed.append(id_)
-        return undecomposed
+        return self.undecomposed
 
     def is_matching_graph(self):
-        for id_ in ids:
-            if len(self.detectors[id_]) > 2 and (id_ not in self.decompositions):
+        for id_ in self.undecomposed:
+            if len(self.detectors[id_]) > 2:
                 return False
         return True
 
