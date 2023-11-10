@@ -19,6 +19,7 @@ class DEM:
         self.ids = []
         self.probs = {}
         self.detectors = {}
+        self.det_to_id = {}
         self.logicals = {}
         self.decompositions = {}
         self.primitives = []
@@ -50,6 +51,7 @@ class DEM:
         self.probs[id_] = prob
         self.detectors[id_] = sorted(dets)  # for comparison
         self.logicals[id_] = sorted(logs)  # for comparison
+        self.det_to_id[tuple(sorted(dets))] = id_
         return id_
 
     def add_primitive(self, id_):
@@ -153,8 +155,5 @@ class DEM:
         return data
 
     def _find_same_fault_id(self, other_dets):
-        other_dets = sorted(other_dets)
-        for id_, dets in self.detectors.items():
-            if dets == other_dets:
-                return id_
-        return
+        other_dets = tuple(sorted(other_dets))
+        return self.det_to_id.get(other_dets, False)
