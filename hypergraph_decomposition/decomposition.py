@@ -25,7 +25,7 @@ def from_pymatching_edges_to_dem_id(edge_array, dem):
     return list_ids
 
 
-def decompose_dem(dem: DEM) -> DEM:
+def decompose_dem(dem: DEM, verbose=True) -> DEM:
     # Step 1: split the DEM into primitive and non-primitive faults
     weight_2_edges = []
     hyperedges = []
@@ -54,9 +54,10 @@ def decompose_dem(dem: DEM) -> DEM:
             if xor(dem.logicals[id1], dem.logicals[id2]) == logicals:
                 dem.add_decomposition(edge, [id1, id2])
             else:
-                print(
-                    "Warning: the logical effect of an edge is different than its weight-1 decomposition"
-                )
+                if verbose:
+                    print(
+                        "Warning: the logical effect of an edge is different than its weight-1 decomposition"
+                    )
                 dem.add_primitive(edge)
         else:
             dem.add_primitive(edge)
