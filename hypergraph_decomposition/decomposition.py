@@ -36,7 +36,7 @@ def decompose_dem(dem: DEM) -> DEM:
             dem.add_primitive(id_)
 
     # some hyperedges may already have a decomposition
-    for id_ in dem.get_undecomposed_hyperedges():
+    for id_ in dem.get_undecomposed_faults():
         detectors = dem.detectors[id_]
         if len(detectors) == 2:
             weight_2_edges.append(id_)

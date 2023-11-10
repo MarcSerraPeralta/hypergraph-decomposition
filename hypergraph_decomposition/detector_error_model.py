@@ -110,7 +110,7 @@ class DEM:
         return dem
 
     def get_decomposed_graph(self):
-        undecom_hyperedges = self.get_undecomposed_hyperedges()
+        undecom_hyperedges = self.get_undecomposed_faults()
         if len(undecom_hyperedges) != 0:
             raise ValueError(
                 f"There are some undecomposed hyperedges:\n{undecom_hyperedges}"
@@ -133,7 +133,7 @@ class DEM:
                 dem.add_fault(prob, dets, logs)
         return dem
 
-    def get_undecomposed_hyperedges(self):
+    def get_undecomposed_faults(self):
         return self.undecomposed
 
     def is_matching_graph(self):
