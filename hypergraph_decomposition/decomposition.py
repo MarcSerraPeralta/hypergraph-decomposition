@@ -25,7 +25,7 @@ def from_pymatching_edges_to_dem_id(edge_array, dem):
     return list_ids
 
 
-def decompose_dem(dem: DEM, verbose=True) -> DEM:
+def decompose_dem(dem: DEM, verbose=True, ignore_logical_error=False) -> DEM:
     # Step 1: split the DEM into primitive and non-primitive faults
     weight_2_edges = []
     hyperedges = []
@@ -56,7 +56,7 @@ def decompose_dem(dem: DEM, verbose=True) -> DEM:
             else:
                 if verbose:
                     print(
-                        "Warning: the logical effect of an edge is different than its weight-1 decomposition"
+                        f"Warning: the logical effect of edge {edge} is different than its weight-1 decomposition"
                     )
                 dem.add_primitive(edge)
         else:
@@ -73,6 +73,41 @@ def decompose_dem(dem: DEM, verbose=True) -> DEM:
         det_vec[det_ids] = 1
         edges = MWPM_prim.decode_to_edges_array(det_vec)
         decomposition = from_pymatching_edges_to_dem_id(edges, dem)
-        dem.add_decomposition(hyper, decomposition)
+        dem.add_decomposition(
+            hyper,
+            decomposition,
+            ignore_logical_error=ignore_logical_error,
+            verbose=verbose,
+        )
 
-    return dem.get_decomposed_graph()
+    return dem
+
+
+def decompose_dem_edges(dem: DEM, verbose=True, ignore_logical_error=False) -> DEM:
+    # Step 1: split the DEM into primitive and non-primitive faults
+    hyperedges = []
+
+    for id_ in dem.ids:
+        detectors = dem.detectors[id_]
+        if len(detectors) <= 2:
+            dem.add_primitive(id_)
+
+    # Step 2: for every hyperedge run MWPM to obtain the most probable decomposition
+    primtive_dem = dem.get_primitive_graph()
+    stim_primitive_dem = from_dem_to_stim(primtive_dem)
+    MWPM_prim = pymatching.Matching(stim_primitive_dem)
+
+    for hyper in dem.get_undecomposed_faults():
+        det_ids = dem.detectors[hyper]
+        det_vec = np.zeros(MWPM_prim.num_detectors, dtype=bool)
+        det_vec[det_ids] = 1
+        edges = MWPM_prim.decode_to_edges_array(det_vec)
+        decomposition = from_pymatching_edges_to_dem_id(edges, dem)
+        dem.add_decomposition(
+            hyper,
+            decomposition,
+            ignore_logical_error=ignore_logical_error,
+            verbose=verbose,
+        )
+
+    return dem
