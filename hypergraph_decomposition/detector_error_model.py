@@ -35,7 +35,8 @@ class DEM:
         # check existance of same faults
         dets = sorted(dets)
         logs = sorted(logs)
-        if same_id := self._find_same_fault_id(dets):
+        same_id = self._find_same_fault_id(dets)
+        if same_id is not None:
             if self.logicals[same_id] != logs:
                 raise ValueError(
                     f"Found fault that has the same detectors but different logical effect, id={same_id}"
@@ -72,7 +73,9 @@ class DEM:
             del self.undecomposed[id_]
         return
 
-    def add_decomposition(self, id_, decomposition):
+    def add_decomposition(
+        self, id_, decomposition, ignore_logical_error=False, verbose=True
+    ):
         # check validity of decomposition
         h_dets = self.detectors[id_]
         h_logs = self.logicals[id_]
@@ -81,18 +84,24 @@ class DEM:
 
         if multiple_xor(e_dets) == h_dets:
             if multiple_xor(e_logs) != h_logs:
-                raise ValueError(
-                    (
-                        "Decomposition has a different logical effect than hyperedge",
-                        f"\nhyperedge({id_})={h_logs}\ndecomposition({decomposition}={e_logs})",
+                if not ignore_logical_error:
+                    raise ValueError(
+                        "Decomposition has a different logical effect than hyperedge"
+                        f"\nhyperedge({id_})={h_logs}\ndecomposition({decomposition}={e_logs})"
                     )
-                )
+                else:
+                    if verbose:
+                        print(
+                            f"Warning: the logical effect of fault id={id_} is different "
+                            "than its decomposition"
+                        )
+                    self.ids.remove(id_)
+                    del self.undecomposed[id_]
+                    return
         else:
             raise ValueError(
-                (
-                    "Decomposition has different detectors than hyperedge",
-                    f"\nhyperedge({id_})={h_dets}\ndecomposition({decomposition}={e_dets})",
-                )
+                "Decomposition has different detectors than hyperedge"
+                f"\nhyperedge({id_})={h_dets}\ndecomposition({decomposition}={e_dets})"
             )
 
         # add decomposition
@@ -157,4 +166,4 @@ class DEM:
 
     def _find_same_fault_id(self, other_dets):
         other_dets = tuple(sorted(other_dets))
-        return self.det_to_id.get(other_dets, False)
+        return self.det_to_id.get(other_dets)
