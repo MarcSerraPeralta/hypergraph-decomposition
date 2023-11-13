@@ -30,19 +30,21 @@ def decomposed_detectors(dem_instr):
             current = []
         if e.is_relative_detector_id():
             current.append(e.val)
+    list_dets.append(current)
     return list_dets
 
 
 def decomposed_logicals(dem_instr):
-    list_dets = []
+    list_logs = []
     current = []
     for e in dem_instr.targets_copy():
         if e.is_separator():
-            list_dets.append(current)
+            list_logs.append(current)
             current = []
         if e.is_logical_observable_id():
             current.append(e.val)
-    return list_dets
+    list_logs.append(current)
+    return list_logs
 
 
 def from_stim_to_dem(stim_dem):
@@ -62,7 +64,25 @@ def from_stim_to_dem(stim_dem):
     for id_, dem_instr in decomposed.items():
         list_dets = decomposed_detectors(dem_instr)
         ids = [dem._find_same_fault_id(dets) for dets in list_dets]
-        dem.add_decomposition(id_, ids)
+        if None in ids:
+            # stim decomposed wrongly the hyperedge
+            # e.g. D0 ^ D1 D2 ^ L0
+            raise ValueError(f"Found wrong decomposition:\n{dem_instr}")
+        true_primitives = []
+        for prim_id in ids:
+            if prim_id in decomposed:
+                # this is not an actual primitive edge
+                # this can only happen for weight-2 edges, if not it is
+                # not a valid hyperedge decomposition into edges
+                list_dets_2 = decomposed_detectors(decomposed[prim_id])
+                ids_2 = [dem._find_same_fault_id(dets) for dets in list_dets_2]
+                true_primitives += ids_2
+                dem.add_primitive(ids_2[0])
+                dem.add_primitive(ids_2[1])
+            else:
+                true_primitives.append(prim_id)
+                dem.add_primitive(prim_id)
+        dem.add_decomposition(id_, true_primitives)
 
     return dem
 
