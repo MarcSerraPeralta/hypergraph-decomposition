@@ -15,7 +15,6 @@ def g(p, q):
 
 class DEM:
     def __init__(self):
-        self._current_id = 0
         self.ids = []
         self.probs = {}
         self.detectors = {}
@@ -47,8 +46,7 @@ class DEM:
                 return same_id
 
         # create new fault
-        id_ = self._current_id
-        self._current_id += 1
+        id_ = len(self.ids)  # new id
         self.ids.append(id_)
         self.probs[id_] = prob
         self.detectors[id_] = sorted(dets)  # for comparison
