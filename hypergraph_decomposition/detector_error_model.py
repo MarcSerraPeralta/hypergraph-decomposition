@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 def xor(list1, list2):
     return sorted(list(set(list1).symmetric_difference(list2)))
 
@@ -91,7 +94,7 @@ class DEM:
                     if verbose:
                         print(
                             f"Warning: the logical effect of fault id={id_} is different "
-                            "than its decomposition"
+                            f"than its decomposition: {decomposition}"
                         )
                     self.ids.remove(id_)
                     del self.undecomposed[id_]
@@ -141,7 +144,7 @@ class DEM:
         return dem
 
     def get_undecomposed_faults(self):
-        return self.undecomposed
+        return deepcopy(self.undecomposed)
 
     def is_matching_graph(self):
         for id_ in self.undecomposed:

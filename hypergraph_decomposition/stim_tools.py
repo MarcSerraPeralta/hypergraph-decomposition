@@ -47,7 +47,7 @@ def decomposed_logicals(dem_instr):
     return list_logs
 
 
-def from_stim_to_dem(stim_dem):
+def from_decomposed_stim_to_dem(stim_dem, ignore_bad_decompositions=False):
     dem = DEM()
     decomposed = {}
     for dem_instr in stim_dem.flattened():
@@ -65,9 +65,13 @@ def from_stim_to_dem(stim_dem):
         list_dets = decomposed_detectors(dem_instr)
         ids = [dem._find_same_fault_id(dets) for dets in list_dets]
         if None in ids:
+            print(ids, dem.ids, dem_instr, list_dets)
             # stim decomposed wrongly the hyperedge
             # e.g. D0 ^ D1 D2 ^ L0
-            raise ValueError(f"Found wrong decomposition:\n{dem_instr}")
+            if not ignore_bad_decompositions:
+                raise ValueError(f"Found wrong decomposition:\n{dem_instr}")
+            else:
+                continue  # skip this decomposition
         true_primitives = []
         for prim_id in ids:
             if prim_id in decomposed:
@@ -83,6 +87,20 @@ def from_stim_to_dem(stim_dem):
                 true_primitives.append(prim_id)
                 dem.add_primitive(prim_id)
         dem.add_decomposition(id_, true_primitives)
+
+    return dem
+
+
+def from_stim_to_dem(stim_dem):
+    dem = DEM()
+    decomposed = {}
+    for dem_instr in stim_dem.flattened():
+        if dem_instr.type != "error":
+            continue
+        detectors = get_detectors(dem_instr)
+        logicals = get_logicals(dem_instr)
+        prob = dem_instr.args_copy()[0]
+        id_ = dem.add_fault(prob, detectors, logicals)
 
     return dem
 
