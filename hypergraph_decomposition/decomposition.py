@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pymatching
 import numpy as np
 
@@ -85,8 +87,6 @@ def decompose_dem(dem: DEM, verbose=True, ignore_logical_error=False) -> DEM:
 
 def decompose_dem_edges(dem: DEM, verbose=True, ignore_logical_error=False) -> DEM:
     # Step 1: split the DEM into primitive and non-primitive faults
-    hyperedges = []
-
     for id_ in dem.ids:
         detectors = dem.detectors[id_]
         if len(detectors) <= 2:
@@ -101,13 +101,33 @@ def decompose_dem_edges(dem: DEM, verbose=True, ignore_logical_error=False) -> D
         det_ids = dem.detectors[hyper]
         det_vec = np.zeros(MWPM_prim.num_detectors, dtype=bool)
         det_vec[det_ids] = 1
-        edges = MWPM_prim.decode_to_edges_array(det_vec)
-        decomposition = from_pymatching_edges_to_dem_id(edges, dem)
-        dem.add_decomposition(
-            hyper,
-            decomposition,
-            ignore_logical_error=ignore_logical_error,
-            verbose=verbose,
-        )
+        errors = True
+        counter = 0
+        MAX_COUNTER = 20
+        prob_factor = 0.5
+        while (errors is not None) and (counter < MAX_COUNTER):
+            edges = MWPM_prim.decode_to_edges_array(det_vec)
+            decomposition = from_pymatching_edges_to_dem_id(edges, dem)
+            errors = dem.add_decomposition(
+                hyper,
+                decomposition,
+                ignore_logical_error=ignore_logical_error,
+                verbose=verbose,
+            )
+            counter += 1
+            if errors is not None:
+                dem_copy = deepcopy(dem)
+                for id_ in decomposition:
+                    dem_copy.probs[id_] *= prob_factor
+                primtive_dem = dem_copy.get_primitive_graph()
+                stim_primitive_dem = from_dem_to_stim(primtive_dem)
+                MWPM_prim = pymatching.Matching(stim_primitive_dem)
+
+        if counter != 0:
+            primtive_dem = dem.get_primitive_graph()
+            stim_primitive_dem = from_dem_to_stim(primtive_dem)
+            MWPM_prim = pymatching.Matching(stim_primitive_dem)
+        elif counter == MAX_COUNTER:
+            raise ValueError("Reached max number of iterations for decomposition")
 
     return dem

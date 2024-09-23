@@ -96,9 +96,9 @@ class DEM:
                             f"Warning: the logical effect of fault id={id_} is different "
                             f"than its decomposition: {decomposition}"
                         )
-                    self.ids.remove(id_)
-                    del self.undecomposed[id_]
-                    return
+                    # self.ids.remove(id_)
+                    # del self.undecomposed[id_]
+                    return True
         else:
             raise ValueError(
                 "Decomposition has different detectors than hyperedge"
