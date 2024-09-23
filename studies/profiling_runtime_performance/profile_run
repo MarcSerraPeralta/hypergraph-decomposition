@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e # exit on error
+rm -f profile.svg profile.dat
+python -m cProfile -o profile.dat $@
+gprof2dot -f pstats profile.dat | dot -Tsvg -o profile.svg
