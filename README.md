@@ -1,44 +1,38 @@
 # hypergraph-decomposition
+
+![example workflow](https://github.com/MarcSerraPeralta/PACKAGE_NAME/actions/workflows/actions.yaml/badge.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 Decomposition of hypergraphs for QEC using Algorithm 3 from https://arxiv.org/pdf/2309.15354.pdf
 
-# Usage
 
-## Using stim DEM
+## Installation
 
-The motivation for using this algorithm instead of stim's build in `circuit.detector_error_model(decompose_errors=True)` method is that stim can fail to decompose some hyperedges that have a valid decomposition. 
+Currently, this package can only be installed from source code. 
+One can install it using:
+```
+git clone git@github.com:MarcSerraPeralta/hypergraph-decomposition.git
+pip install hypergraph_decomposition/
+```
+
+
+## Usage
+
+### from `stim.DetectorErrorModel`
 
 Any Detector Error Model (DEM) from stim can be decomposed by
 
 ```
-from hypergraph_decomposition import from_stim_to_dem, decompose_dem, from_dem_to_stim
+from hyper_decom import decompose_dem
 
-dem_stim = stim.DetectorErrorModel("...")
+dem = stim.DetectorErrorModel(...)
 
-dem = from_stim_to_dem(dem_stim)
 decom_dem = decompose_dem(dem)
-
-# to get back the decomposed DEM in stim's format
-decom_stim = from_dem_to_stim(decom_dem)
 ```
 
-As stim performs a slightly better job at decomposing the hyperedges (see `benchmarks`), one can use stim's decomposition for the hyperedges it can decompose and Algorithm 3 for the rest of the hyperedges. This is implemented by
+### Using list of (hyper)edges and their probabilities
 
-```
-from hypergraph_decomposition import from_stim_to_dem, decompose_dem, from_dem_to_stim
-
-circuit = stim.Circuit("...")
-dem_stim = circuit.detector_error_model(decompose_errors=True, ignore_decomposition_failures=True)
-
-dem = from_stim_to_dem(dem_stim)
-decom_dem = decompose_dem(dem)
-
-# to get back the decomposed DEM in stim's format
-decom_stim = from_dem_to_stim(decom_dem)
-```
-
-# Using list of (hyper)edges and their probabilities
-
-First, one needs to build the DEM:
+First, one needs to build the DEM using `hyper_decom.DEM` and then decompose it.
 
 ```
 from hypergraph_decomposition import DEM, decompose_dem
@@ -55,12 +49,8 @@ for p, d, l in inputs:
 
 decom_dem = decompose_dem(dem)
 
-# get the probabililities, detectors and logical effects of the decomposed DEM
-output = []
-for id_ in decom_dem.ids:
-	p = decom_dem.probs[id_]
-	d = decom_dem.detectors[id_]
-	l = decom_dem.logicals[id_]
-	output.append([p, d, l])
+graph_dem = decom_dem.get_decomposed_dem()
 ```
 
+Note that `decom_dem` contains the same faults as `dem` but including the decomposition information.
+However, `graph_dem` only contains faults triggering at most two edges, with updated probabilities taking into account the hyperedges.
