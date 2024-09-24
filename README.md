@@ -1,6 +1,6 @@
 # hypergraph-decomposition
 
-![example workflow](https://github.com/MarcSerraPeralta/hypergraph_decomposition/actions/workflows/actions.yaml/badge.svg)
+![example workflow](https://github.com/MarcSerraPeralta/hypergraph-decomposition/actions/workflows/actions.yaml/badge.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Decomposition of hypergraphs for QEC using Algorithm 3 from https://arxiv.org/pdf/2309.15354.pdf
