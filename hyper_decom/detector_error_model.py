@@ -48,7 +48,7 @@ class DEM:
         dets, logs = tuple(sorted(dets)), tuple(sorted(logs))
 
         # check existance of same faults
-        if same_id := self.det_to_id.get(dets):
+        if (same_id := self.det_to_id.get(dets)) is not None:
             if self.logicals[same_id] != logs:
                 raise ValueError(
                     "A fault in this DEM triggers the same detectors "
@@ -126,6 +126,13 @@ class DEM:
             raise TypeError(
                 f"'decomposition' must be iterable, but {type(decomposition)} was given."
             )
+        if any([not self.is_primitive(i) for i in decomposition]):
+            raise ValueError(
+                "All elements in the decomposition must be primitive faults, "
+                f"but {decomposition} were given."
+            )
+        if self.is_primitive(id_):
+            raise ValueError(f"Cannot add decomposition to primitive fault id={id_}.")
 
         h_dets = self.detectors[id_]
         h_logs = self.logicals[id_]
@@ -162,10 +169,13 @@ class DEM:
         their corresponding probabilities."""
         dem = DEM()
         for id_ in self.primitives:
-            dem.add_fault(self.probs[id_], self.detectors[id_], self.logicals[id_])
+            new_id = dem.add_fault(
+                self.probs[id_], self.detectors[id_], self.logicals[id_]
+            )
+            dem.set_as_primitive(new_id)
         return dem
 
-    def get_decomposed_graph(self) -> DEM:
+    def get_decomposed_dem(self) -> DEM:
         """Returns a DEM containing only the primitive faults with their
         probabilities updated from the hyperedges."""
         if len(self.get_undecomposed_faults()) != 0:
@@ -207,7 +217,7 @@ class DEM:
             "prob": self.probs[id_],
             "is_primitive": id_ in self.primitives,
             "decomposition": (
-                self.decompositions[id_] if id_ in self.decompositions[id_] else None
+                self.decompositions[id_] if id_ in self.decompositions else None
             ),
         }
         return data

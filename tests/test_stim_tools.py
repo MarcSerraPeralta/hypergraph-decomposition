@@ -51,6 +51,8 @@ def test_from_dem_to_stim():
     dem.add_fault(0.2, [0, 2], [1])
     dem.add_fault(0.1, [0], [2])
     dem.add_fault(0.1, [1], [2])
+    dem.set_as_primitive(2)
+    dem.set_as_primitive(3)
     dem.add_decomposition(0, [2, 3])
 
     stim_dem = from_dem_to_stim(dem)

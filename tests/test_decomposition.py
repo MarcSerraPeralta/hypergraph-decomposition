@@ -7,8 +7,8 @@ from hyper_decom import decompose_dem
 def test_decompose_dem():
     dem = stim.DetectorErrorModel(
         """
-        error(0.1) D0 D1 D2 D3
         error(0.1) D0 D1 L0
+        error(0.1) D0 D1 D2 D3
         error(0.1) D2 D3 L0
         """
     )
@@ -17,8 +17,8 @@ def test_decompose_dem():
 
     expected_dem = stim.DetectorErrorModel(
         """
-        error(0.1) D0 D1 L0 ^ D2 D3 L0
         error(0.1) D0 D1 L0
+        error(0.1) D0 D1 L0 ^ D2 D3 L0
         error(0.1) D2 D3 L0
         """
     )
