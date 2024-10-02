@@ -9,7 +9,7 @@ Decomposition of hypergraphs for QEC using Algorithm 3 from https://arxiv.org/pd
 ## Installation
 
 Currently, this package can only be installed from source code. 
-One can install it using:
+For Unix-like systems, one can install it using the following commands:
 ```
 git clone git@github.com:MarcSerraPeralta/hypergraph-decomposition.git
 pip install hypergraph_decomposition/
