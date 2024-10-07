@@ -1,0 +1,4 @@
+studies/
+*.pyc
+*.egg-info/
+.ipynb_checkpoints
