@@ -4,7 +4,9 @@ from pymatching import Matching
 import numpy as np
 import stim
 
-from .stim_tools import from_dem_to_stim, from_stim_to_dem
+from dem_decoders import BP_OSD
+
+from .stim_tools import from_dem_to_stim, from_stim_to_dem, get_detectors, get_logicals
 from .detector_error_model import DEM
 
 
@@ -118,3 +120,73 @@ def decompose_dem(
         dem = from_dem_to_stim(dem)
 
     return dem
+
+
+def find_valid_decomposition(
+    primitive_dem: stim.DetectorErrorModel, hyperfault: stim.DemInstruction
+) -> None | tuple[int]:
+    """Returns if a possible correct decomposition can be found for
+    the given hyperfault. A 'correct decomposition' is when the logical
+    effect of the hyperedge matches the logical effect of the decomposition.
+
+    Parameters
+    ----------
+    primtive_dem
+        DEM to be used to decompose the hyperfault.
+    hyperfault
+        Hyperfault to be decomposed.
+
+    Returns
+    -------
+    ``None`` if no correct decomposition has been found and
+    ``fault_inds`` of the correct decomposition otherwise.
+    """
+    if not isinstance(primitive_dem, stim.DetectorErrorModel):
+        raise TypeError(
+            "'primitive_dem' must be a stim.DetectorErrorModel,"
+            f" but type{primitive_dem} was given."
+        )
+    if not isinstance(hyperfault, stim.DemInstruction):
+        raise TypeError(
+            "'hyperfault' must be a stim.DemInstruction,"
+            f" but type{hyperfault} was given."
+        )
+    if hyperfault.type != "error":
+        raise TypeError(
+            f"'hyperfault' must be an error, but {hyperfault.type} was given."
+        )
+
+    # Transform logicals into detectors
+    num_dets = primitive_dem.num_detectors
+    new_primitive_dem = stim.DetectorErrorModel()
+    for dem_instr in primitive_dem.flattened():
+        if dem_instr.type != "error":
+            continue
+
+        dets = get_detectors(dem_instr)
+        logs = tuple(l + num_dets for l in get_logicals(dem_instr))
+        prob = dem_instr.args_copy()
+
+        new_instr = stim.DemInstruction(
+            type="error",
+            args=prob,
+            targets=list(map(stim.target_relative_detector_id, dets + logs)),
+        )
+        new_primitive_dem.append(new_instr)
+
+    # Prepare hyperedge detector vector
+    dets = get_detectors(hyperfault)
+    logs = tuple(l + num_dets for l in get_logicals(hyperfault))
+    det_ids = np.array(dets + logs)
+    det_vec = np.zeros(new_primitive_dem.num_detectors, dtype=bool)
+    det_vec[det_ids] = 1
+
+    # Try to find decomposition
+    bp_osd = BP_OSD(new_primitive_dem)
+    error_mech = bp_osd.decode_to_faults_array(det_vec)
+    if (bp_osd.check_matrix @ error_mech != det_vec).any():
+        return None
+
+    fault_inds = np.where(error_mech)[0]
+
+    return tuple(fault_inds)
