@@ -22,6 +22,7 @@ dependencies = [
   "numpy",
   "stim",
   "pymatching",
+  "dem-decoders @ git+ssh://git@github.com/MarcSerraPeralta/dem-decoders",
 ]
 [project.optional-dependencies] # Optional
 dev = ["pytest", "pip-tools", "gprof2dot", "black", "pytest-black"]
