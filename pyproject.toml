@@ -1,0 +1,31 @@
+[build-system]
+# These are the assumed default build requirements from pip:
+# https://pip.pypa.io/en/stable/reference/pip/#pep-517-and-518-support
+requires = ["setuptools>=43.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "hyper-decom" 
+version = "0.1.0" 
+description = "Hypergraph decomposition for Detector Error Models"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["qec", "hyperedge", "hypergraph", "decomposition"]
+authors = [
+  {name = "Marc Serra Peralta", email = "marcserraperalta@gmail.com" } 
+]
+maintainers = [
+  {name = "Marc Serra Peralta", email = "marcserraperalta@gmail.com" } 
+]
+dependencies = [
+  "numpy",
+  "stim",
+  "pymatching",
+  "dem-decoders @ git+ssh://git@github.com/MarcSerraPeralta/dem-decoders",
+]
+[project.optional-dependencies] # Optional
+dev = ["pytest", "pip-tools", "gprof2dot", "black", "pytest-black"]
+
+[tool.setuptools.packages.find]
+exclude = ["studies"]
